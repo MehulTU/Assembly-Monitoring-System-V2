@@ -1,6 +1,9 @@
 """
 detect_near_duplicates.py
 
+HOW TO RUN THE FILE:
+    python detect_near_duplicates.py  (TYPE THIS IN TERMINAL)
+
 Prototype V2 - Near-Duplicate Image Detection
 
 Purpose:

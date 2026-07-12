@@ -1,0 +1,2 @@
+source_video,processed_frames,frames_with_detections,frames_without_detections,detection_rate_percent,total_detections,marker_detections,power_adapter_detections,video_fps,video_duration_seconds,confidence_threshold,model_path
+T_20260712_200418_666396.mp4,783,783,0,100.0,1484,688,796,30.0,26.1,0.25,C:\Users\mehul\Desktop\Thesis\SOFTWARE V1 PROTOTYPE_Final\Assembly_monitor\runs\detect\runs\detect\baseline_v1\weights\best.pt

@@ -1,6 +1,9 @@
 """
 check_dataset_quality.py
 
+HOW TO RUN THE FILE:
+    python check_dataset_quality.py  (TYPE THIS IN TERMINAL)
+
 Prototype V2 - Dataset Image Quality Analysis
 
 Purpose:

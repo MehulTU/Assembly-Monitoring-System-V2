@@ -1,6 +1,9 @@
 """
 build_review_manifest.py
 
+HOW TO RUN THE FILE:
+    python build_review_manifest.py  (TYPE THIS IN TERMINAL)
+
 Prototype V2 - Dataset Review Manifest Builder
 
 Purpose:

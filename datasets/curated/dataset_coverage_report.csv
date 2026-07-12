@@ -1,0 +1,16 @@
+experiment_id,trial_number,trial_id,trial_condition,objects_present,duration_seconds,recorded_frames,extracted_images,kept_images,rejected_images,undecided_images,retention_rate_percent,kept_blurry_images,kept_near_duplicate_images,dataset_share_percent
+experiment_001_two_object_detection,1,T_20260712_195606_753667,empty_workspace,none,6.361,191,7,5,2,0,71.43,0,5,4.1
+experiment_001_two_object_detection,2,T_20260712_195649_403972,marker_center,marker,7.631,230,8,4,4,0,50.0,0,3,3.28
+experiment_001_two_object_detection,3,T_20260712_195728_922976,marker_left,marker,6.632,200,7,4,3,0,57.14,0,3,3.28
+experiment_001_two_object_detection,4,T_20260712_195753_424095,marker_right,marker,5.967,180,6,5,1,0,83.33,0,4,4.1
+experiment_001_two_object_detection,5,T_20260712_195837_322396,marker_rotated,marker,9.545,287,10,6,4,0,60.0,0,0,4.92
+experiment_001_two_object_detection,6,T_20260712_195933_076767,power_adapter_center,power_adapter,5.543,167,6,5,1,0,83.33,0,4,4.1
+experiment_001_two_object_detection,7,T_20260712_200002_161235,power_adapter_left,power_adapter,6.539,196,7,5,2,0,71.43,0,4,4.1
+experiment_001_two_object_detection,8,T_20260712_200033_240601,power_adapter_right,power_adapter,5.59,169,6,6,0,0,100.0,0,5,4.92
+experiment_001_two_object_detection,9,T_20260712_200051_593408,power_adapter_rotated,power_adapter,11.14,334,12,11,1,0,91.67,0,0,9.02
+experiment_001_two_object_detection,10,T_20260712_200134_229147,marker_and_power_adapter_separated,"marker,power_adapter",6.231,188,7,6,1,0,85.71,0,6,4.92
+experiment_001_two_object_detection,11,T_20260712_200203_900296,marker_and_power_adapter_close,"marker,power_adapter",6.703,202,7,7,0,0,100.0,0,6,5.74
+experiment_001_two_object_detection,12,T_20260712_200241_482341,marker_partial_occlusion,marker,7.122,214,8,7,1,0,87.5,0,3,5.74
+experiment_001_two_object_detection,13,T_20260712_200303_171698,power_adapter_partial_occlusion,power_adapter,13.944,418,14,10,4,0,71.43,0,1,8.2
+experiment_001_two_object_detection,14,T_20260712_200340_371645,hand_interaction,"marker,power_adapter",15.304,459,16,14,2,0,87.5,0,0,11.48
+experiment_001_two_object_detection,15,T_20260712_200418_666396,continuous_movement,"marker,power_adapter",26.133,783,27,27,0,0,100.0,0,0,22.13

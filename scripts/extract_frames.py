@@ -1,6 +1,10 @@
 """
 extract_frames.py
 
+HOW TO RUN THE FILE:
+    python extract_frames.py  (TYPE THIS IN TERMINAL)
+
+
 Prototype V2 - Frame Extraction Tool
 
 Purpose:
