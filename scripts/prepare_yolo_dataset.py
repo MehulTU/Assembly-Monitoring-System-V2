@@ -2,6 +2,19 @@
 HOW TO RUN THE FILE:
     python scripts/prepare_yolo_dataset.py (TYPE THIS IN TERMINAL)
 
+Prototype V2 - Trial-Based YOLO Dataset Preparation (Auto-Split)
+
+What changed vs. the previous version:
+    - The hard-coded TRIAL_ID_TO_NUMBER dictionary is GONE.
+    - The hard-coded TRAIN/VAL/TEST trial number sets are GONE.
+    - Trials are discovered automatically from final_manifest.csv.
+    - Trials are split into train/val/test by ratio (70/15/15).
+
+The script now works with 15, 30, 60, or 200 trials without
+editing the code again.
+
+Splitting stays TRIAL-BASED: all images from one trial always land
+in the same split, so there is no trial leakage between splits.
 '''
 
 from pathlib import Path
@@ -42,37 +55,17 @@ CLASS_NAMES = {
     1: "power_adapter",
 }
 
-TRIAL_ID_TO_NUMBER = {
-    "T_20260712_195606_753667": 1,
-    "T_20260712_195649_403972": 2,
-    "T_20260712_195728_922976": 3,
-    "T_20260712_195753_424095": 4,
-    "T_20260712_195837_322396": 5,
-    "T_20260712_195933_076767": 6,
-    "T_20260712_200002_161235": 7,
-    "T_20260712_200033_240601": 8,
-    "T_20260712_200051_593408": 9,
-    "T_20260712_200134_229147": 10,
-    "T_20260712_200203_900296": 11,
-    "T_20260712_200241_482341": 12,
-    "T_20260712_200303_171698": 13,
-    "T_20260712_200340_371645": 14,
-    "T_20260712_200418_666396": 15,
-}
 
-TRAIN_TRIAL_NUMBERS = {
-    2, 3, 4, 5,
-    7, 8, 9, 10,
-    11, 12, 13,
-}
+# ============================================================
+# AUTOMATIC TRIAL SPLITTING
+# ============================================================
+# Trials are discovered automatically from the manifest and
+# split by these ratios. All images of one trial always stay
+# in the same split (no trial leakage).
 
-VAL_TRIAL_NUMBERS = {
-    1, 15,
-}
-
-TEST_TRIAL_NUMBERS = {
-    6, 14,
-}
+TRAIN_RATIO = 0.70
+VAL_RATIO = 0.15
+TEST_RATIO = 0.15
 
 
 # ============================================================
@@ -147,31 +140,27 @@ def find_label_files():
     return label_files
 
 
-def parse_trial_number(value):
-    value = str(value).strip()
+def determine_split(trial_index, total_trials):
+    """
+    Assign a trial to train / val / test based on its index
+    in the sorted list of unique trial IDs.
 
-    try:
-        return int(value)
+    Because trial IDs are timestamp-based, sorting them gives
+    chronological order, and the split is fully deterministic:
+    running the script twice always produces the same split.
+    """
 
-    except ValueError:
-        raise ValueError(
-            f"Could not convert trial number to integer: {value}"
-        )
+    train_end = int(total_trials * TRAIN_RATIO)
+    val_end = train_end + int(total_trials * VAL_RATIO)
 
-
-def determine_split(trial_number):
-    if trial_number in TRAIN_TRIAL_NUMBERS:
+    if trial_index < train_end:
         return "train"
 
-    if trial_number in VAL_TRIAL_NUMBERS:
+    elif trial_index < val_end:
         return "val"
 
-    if trial_number in TEST_TRIAL_NUMBERS:
+    else:
         return "test"
-
-    raise ValueError(
-        f"Trial {trial_number} was not assigned to any split."
-    )
 
 
 def count_boxes(label_path):
@@ -263,10 +252,27 @@ def main():
         ["trial_id"],
     )
 
+    # --------------------------------------------------------
+    # AUTOMATIC TRIAL DISCOVERY
+    # --------------------------------------------------------
+
+    unique_trial_ids = sorted(
+        {
+            row[trial_id_column].strip()
+            for row in manifest_rows
+        }
+    )
+
+    trial_id_to_index = {
+        trial_id: index
+        for index, trial_id in enumerate(unique_trial_ids)
+    }
+
     image_files = get_image_files()
     label_files = find_label_files()
 
     print(f"Manifest rows       : {len(manifest_rows)}")
+    print(f"Detected trials     : {len(unique_trial_ids)}")
     print(f"Final image files   : {len(image_files)}")
     print(f"Exported label files: {len(label_files)}")
 
@@ -313,14 +319,14 @@ def main():
 
         trial_id = row[trial_id_column].strip()
 
-        if trial_id not in TRIAL_ID_TO_NUMBER:
-            raise ValueError(
-                f"Unknown trial ID found in final manifest: {trial_id}"
-            )
+        trial_index = trial_id_to_index[trial_id]
 
-        trial_number = TRIAL_ID_TO_NUMBER[trial_id]
+        split = determine_split(
+            trial_index,
+            len(unique_trial_ids),
+        )
 
-        split = determine_split(trial_number)
+        trial_number = trial_index + 1
 
         image_path = image_files.get(image_name)
 
@@ -511,9 +517,15 @@ def main():
         split_box_counts.values()
     )
 
+    total_empty_images = sum(
+        empty_images.values()
+    )
+
     print(f"Input manifest rows      : {len(manifest_rows)}")
+    print(f"Detected trials          : {len(unique_trial_ids)}")
     print(f"Output dataset images    : {total_output_images}")
     print(f"Output bounding boxes    : {total_output_boxes}")
+    print(f"Images without labels    : {total_empty_images}")
     print(f"Missing source images    : {len(missing_images)}")
     print(f"Trial leakage detected   : {'YES' if leakage_detected else 'NO'}")
     print(f"Dataset YAML             : {DATA_YAML_PATH}")
@@ -523,6 +535,25 @@ def main():
         or total_output_images != len(manifest_rows)
         or leakage_detected
     )
+
+    # --------------------------------------------------------
+    # ANNOTATION COVERAGE WARNING
+    # --------------------------------------------------------
+    # Empty label files are legitimate for genuine negative
+    # images (e.g. empty_workspace trials). But if MOST images
+    # have no labels, the annotations are probably out of date
+    # and training would produce a weak model.
+
+    if (
+        total_output_images > 0
+        and total_empty_images / total_output_images > 0.30
+    ):
+
+        print()
+        print("WARNING: More than 30% of the dataset images have")
+        print("no annotations. If these are not intentional negative")
+        print("images, re-export the updated annotations from CVAT")
+        print("before training.")
 
     print_header("STATUS")
 

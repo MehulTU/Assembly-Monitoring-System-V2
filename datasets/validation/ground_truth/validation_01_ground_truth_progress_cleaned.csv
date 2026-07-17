@@ -1,0 +1,8 @@
+source_video,total_video_frames,video_fps,change_frame,state_id,assembly_state_gt,marker_present_gt,power_adapter_present_gt
+validation_01_correct_sequence.mp4,1298,30.0,0,0,EMPTY,False,False
+validation_01_correct_sequence.mp4,1298,30.0,180,1,MARKER_ONLY,True,False
+validation_01_correct_sequence.mp4,1298,30.0,344,3,BOTH_PRESENT,True,True
+validation_01_correct_sequence.mp4,1298,30.0,653,1,MARKER_ONLY,True,False
+validation_01_correct_sequence.mp4,1298,30.0,855,3,BOTH_PRESENT,True,True
+validation_01_correct_sequence.mp4,1298,30.0,1027,1,MARKER_ONLY,True,False
+validation_01_correct_sequence.mp4,1298,30.0,1124,0,EMPTY,False,False

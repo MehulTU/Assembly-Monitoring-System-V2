@@ -1,0 +1,2 @@
+source_video,processed_frames,frames_with_detections,frames_without_detections,detection_rate_percent,total_detections,marker_detections,power_adapter_detections,video_fps,video_duration_seconds,confidence_threshold,model_path
+validation_01_correct_sequence.mp4,1298,937,361,72.188,1221,849,372,30.0,43.266667,0.25,C:\Users\mehul\Desktop\Thesis\SOFTWARE V2 AI PROTOTYPE\weights\best.pt

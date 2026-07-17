@@ -1,0 +1,17 @@
+source_video,event_number,frame_number,timestamp_seconds,previous_state,new_state,event_type,event_description,sequence_violation,assembly_completed
+validation_01_correct_sequence.mp4,1,183,6.1,EMPTY,MARKER_ONLY,MARKER_ADDED,Marker entered the workspace.,False,False
+validation_01_correct_sequence.mp4,2,334,11.133333,MARKER_ONLY,BOTH_PRESENT,POWER_ADAPTER_ADDED,Power adapter added after marker.,False,True
+validation_01_correct_sequence.mp4,3,374,12.466667,BOTH_PRESENT,POWER_ADAPTER_ONLY,MARKER_REMOVED,Marker removed while power adapter remained.,False,False
+validation_01_correct_sequence.mp4,4,379,12.633333,POWER_ADAPTER_ONLY,BOTH_PRESENT,MARKER_ADDED_AFTER_ADAPTER,Marker added after power adapter.,True,True
+validation_01_correct_sequence.mp4,5,493,16.433333,BOTH_PRESENT,MARKER_ONLY,POWER_ADAPTER_REMOVED,Power adapter removed while marker remained.,False,False
+validation_01_correct_sequence.mp4,6,527,17.566667,MARKER_ONLY,BOTH_PRESENT,POWER_ADAPTER_ADDED,Power adapter added after marker.,False,True
+validation_01_correct_sequence.mp4,7,630,21.0,BOTH_PRESENT,MARKER_ONLY,POWER_ADAPTER_REMOVED,Power adapter removed while marker remained.,False,False
+validation_01_correct_sequence.mp4,8,854,28.466667,MARKER_ONLY,BOTH_PRESENT,POWER_ADAPTER_ADDED,Power adapter added after marker.,False,True
+validation_01_correct_sequence.mp4,9,857,28.566667,BOTH_PRESENT,MARKER_ONLY,POWER_ADAPTER_REMOVED,Power adapter removed while marker remained.,False,False
+validation_01_correct_sequence.mp4,10,876,29.2,MARKER_ONLY,BOTH_PRESENT,POWER_ADAPTER_ADDED,Power adapter added after marker.,False,True
+validation_01_correct_sequence.mp4,11,884,29.466667,BOTH_PRESENT,POWER_ADAPTER_ONLY,MARKER_REMOVED,Marker removed while power adapter remained.,False,False
+validation_01_correct_sequence.mp4,12,967,32.233333,POWER_ADAPTER_ONLY,BOTH_PRESENT,MARKER_ADDED_AFTER_ADAPTER,Marker added after power adapter.,True,True
+validation_01_correct_sequence.mp4,13,982,32.733333,BOTH_PRESENT,MARKER_ONLY,POWER_ADAPTER_REMOVED,Power adapter removed while marker remained.,False,False
+validation_01_correct_sequence.mp4,14,1116,37.2,MARKER_ONLY,EMPTY,MARKER_REMOVED,Marker removed from workspace.,False,False
+validation_01_correct_sequence.mp4,15,1141,38.033333,EMPTY,MARKER_ONLY,MARKER_ADDED,Marker entered the workspace.,False,False
+validation_01_correct_sequence.mp4,16,1144,38.133333,MARKER_ONLY,EMPTY,MARKER_REMOVED,Marker removed from workspace.,False,False

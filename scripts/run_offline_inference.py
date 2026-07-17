@@ -2,63 +2,38 @@
 run_offline_inference.py
 
 HOW TO RUN THE FILE:
-    python scripts\run_offline_inference.py  (TYPE THIS IN TERMINAL)
-    
-Prototype V2 - Offline YOLO Inference and Raw Detection Logging
 
-Purpose:
-    Run the trained YOLO object-detection model on one recorded video and
-    convert frame-by-frame predictions into structured detection data.
 
-Why this script is needed:
-    YOLO normally produces visual predictions such as bounding boxes.
+MANUAL MODE:
+    python scripts\run_offline_inference.py
 
-    The Analytics Model cannot directly use prediction images.
+DIRECT VIDEO MODE:
+    python scripts\run_offline_inference.py --video "path_to_video.mp4"
 
-    It needs structured information describing:
+OPTIONAL CUSTOM OUTPUT DIRECTORY:
+    python scripts\run_offline_inference.py ^
+        --video "path_to_video.mp4" ^
+        --output-dir "path_to_output_folder"
 
-        - which object was detected
-        - when it was detected
-        - detection confidence
-        - bounding-box location
-        - source frame number
-        - source video
+PURPOSE:
 
-    This script therefore acts as the connection between:
+Run the trained YOLO object-detection model on one video and convert
+frame-by-frame predictions into structured detection data.
 
-        TRAINED YOLO MODEL
-                ↓
-        OBJECT DETECTIONS
-                ↓
-        ANALYTICS MODEL
+The script supports:
 
-Processing workflow:
+1. Manual mode for the original Prototype V2 workflow.
+2. Direct-video mode for automated validation experiments.
+3. Custom analytics output directories for isolated experiment results.
 
-    1. Load trained YOLO model (best.pt).
-    2. Open one recorded experiment video.
-    3. Process every video frame.
-    4. Run YOLO object detection.
-    5. Save every accepted detection.
-    6. Save one CSV row per detected object.
-    7. Save a processing summary.
+OUTPUTS:
 
-Outputs:
-
-    datasets/analytics/raw_detections.csv
-
-    datasets/analytics/inference_summary.csv
-
-Important:
-
-    This script does NOT determine assembly states.
-
-    It only produces raw YOLO detection information.
-
-    Temporal filtering and assembly-state analysis are performed
-    by later Analytics Model scripts.
+    raw_detections.csv
+    inference_summary.csv
 """
 
 from pathlib import Path
+import argparse
 import csv
 import cv2
 
@@ -73,38 +48,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 RAW_VIDEO_FOLDER = PROJECT_ROOT / "datasets" / "raw" / "videos"
 
-ANALYTICS_FOLDER = PROJECT_ROOT / "datasets" / "analytics"
+DEFAULT_ANALYTICS_FOLDER = PROJECT_ROOT / "datasets" / "analytics"
 
-RAW_DETECTION_FILE = ANALYTICS_FOLDER / "raw_detections.csv"
-
-INFERENCE_SUMMARY_FILE = ANALYTICS_FOLDER / "inference_summary.csv"
-
-
-# Current trained baseline model.
-#
-# The model is currently stored inside the old V1 Ultralytics runs
-# directory because of the previously configured Ultralytics runs_dir.
-#
-# This does not affect model validity.
-
-MODEL_PATH = Path(
-    r"C:\Users\mehul\Desktop\Thesis\SOFTWARE V1 PROTOTYPE_Final"
-    r"\Assembly_monitor\runs\detect\runs\detect"
-    r"\baseline_v1\weights\best.pt"
-)
-
-
-# Minimum YOLO confidence required for saving a detection.
+MODEL_PATH = PROJECT_ROOT / "weights" / "best.pt"
 
 CONFIDENCE_THRESHOLD = 0.25
 
-
-# YOLO inference image size.
-
 IMAGE_SIZE = 640
-
-
-# GPU selection.
 
 DEVICE = 0
 
@@ -114,28 +64,65 @@ DEVICE = 0
 # ======================================================================
 
 def print_header(title):
+
     print()
     print("=" * 75)
     print(title)
     print("=" * 75)
 
 
+def parse_arguments():
+
+    parser = argparse.ArgumentParser(
+
+        description=(
+            "Run Prototype V2 offline YOLO inference "
+            "on one video."
+        )
+    )
+
+    parser.add_argument(
+
+        "--video",
+
+        type=str,
+
+        default=None,
+
+        help=(
+            "Optional path to the exact video to analyse. "
+            "If omitted, manual video selection is used."
+        ),
+    )
+
+    parser.add_argument(
+
+        "--output-dir",
+
+        type=str,
+
+        default=None,
+
+        help=(
+            "Optional output directory for raw_detections.csv "
+            "and inference_summary.csv."
+        ),
+    )
+
+    return parser.parse_args()
+
+
 def get_video_files():
-    """
-    Find recorded MP4 videos inside the raw video folder.
-    """
 
     return sorted(RAW_VIDEO_FOLDER.glob("*.mp4"))
 
 
 def select_video(video_files):
-    """
-    Allow the user to select one recorded video using a numbered menu.
-    """
 
     print_header("AVAILABLE RECORDED VIDEOS")
 
     for index, video_path in enumerate(video_files, start=1):
+
         print(f"{index:3d}. {video_path.name}")
 
     print()
@@ -147,23 +134,65 @@ def select_video(video_files):
         ).strip()
 
         try:
+
             selection = int(selection)
 
             if 1 <= selection <= len(video_files):
+
                 return video_files[selection - 1]
 
         except ValueError:
+
             pass
 
-        print("Invalid selection. Enter one of the listed video numbers.")
+        print(
+            "Invalid selection. "
+            "Enter one of the listed video numbers."
+        )
 
 
-def create_output_folders():
-    """
-    Create analytics output folder if it does not exist.
-    """
+def resolve_video(video_argument):
 
-    ANALYTICS_FOLDER.mkdir(parents=True, exist_ok=True)
+    if video_argument is not None:
+
+        selected_video = Path(video_argument).expanduser().resolve()
+
+        if not selected_video.exists():
+
+            raise FileNotFoundError(
+                f"Requested video not found:\n{selected_video}"
+            )
+
+        if not selected_video.is_file():
+
+            raise FileNotFoundError(
+                f"Requested video path is not a file:\n"
+                f"{selected_video}"
+            )
+
+        return selected_video
+
+
+    video_files = get_video_files()
+
+    if not video_files:
+
+        raise FileNotFoundError(
+            f"No MP4 videos found inside:\n{RAW_VIDEO_FOLDER}"
+        )
+
+    print(f"Recorded videos found: {len(video_files)}")
+
+    return select_video(video_files)
+
+
+def resolve_output_directory(output_argument):
+
+    if output_argument is None:
+
+        return DEFAULT_ANALYTICS_FOLDER
+
+    return Path(output_argument).expanduser().resolve()
 
 
 # ======================================================================
@@ -172,25 +201,58 @@ def create_output_folders():
 
 def main():
 
+    args = parse_arguments()
+
+    selected_video = resolve_video(args.video)
+
+    analytics_folder = resolve_output_directory(args.output_dir)
+
+    raw_detection_file = (
+        analytics_folder / "raw_detections.csv"
+    )
+
+    inference_summary_file = (
+        analytics_folder / "inference_summary.csv"
+    )
+
+
     print_header(
-        "PROTOTYPE V2 - OFFLINE YOLO INFERENCE AND RAW DETECTION LOGGING"
+        "PROTOTYPE V2 - OFFLINE YOLO INFERENCE "
+        "AND RAW DETECTION LOGGING"
     )
 
     print(f"Project root:\n{PROJECT_ROOT}")
+
     print()
 
-    print(f"Raw video folder:\n{RAW_VIDEO_FOLDER}")
+    print(f"Selected video:\n{selected_video}")
+
     print()
 
     print(f"YOLO model:\n{MODEL_PATH}")
+
     print()
 
-    print(f"Raw detection output:\n{RAW_DETECTION_FILE}")
+    print(f"Analytics output directory:\n{analytics_folder}")
+
     print()
 
-    print(f"Inference summary:\n{INFERENCE_SUMMARY_FILE}")
+    print(f"Raw detection output:\n{raw_detection_file}")
 
-    create_output_folders()
+    print()
+
+    print(f"Inference summary:\n{inference_summary_file}")
+
+
+    # ------------------------------------------------------------------
+    # CREATE OUTPUT DIRECTORY
+    # ------------------------------------------------------------------
+
+    analytics_folder.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
 
     # ------------------------------------------------------------------
     # VERIFY MODEL
@@ -206,26 +268,23 @@ def main():
 
     print("YOLO model found.")
 
+
     # ------------------------------------------------------------------
-    # FIND VIDEOS
+    # VERIFY VIDEO
     # ------------------------------------------------------------------
 
-    print_header("SEARCHING FOR RECORDED VIDEOS")
+    print_header("VERIFYING INPUT VIDEO")
 
-    video_files = get_video_files()
-
-    if not video_files:
+    if not selected_video.exists():
 
         raise FileNotFoundError(
-            f"No MP4 videos found inside:\n{RAW_VIDEO_FOLDER}"
+            f"Video not found:\n{selected_video}"
         )
 
-    print(f"Recorded videos found: {len(video_files)}")
+    print("Input video found.")
 
-    selected_video = select_video(video_files)
+    print(f"Video selected:\n{selected_video}")
 
-    print()
-    print(f"Selected video:\n{selected_video}")
 
     # ------------------------------------------------------------------
     # LOAD MODEL
@@ -236,6 +295,7 @@ def main():
     model = YOLO(str(MODEL_PATH))
 
     print("YOLO model loaded successfully.")
+
 
     # ------------------------------------------------------------------
     # OPEN VIDEO
@@ -266,14 +326,24 @@ def main():
     )
 
     if fps <= 0:
+
+        video_capture.release()
+
         raise RuntimeError("Invalid video FPS.")
 
     video_duration_seconds = total_frames / fps
 
     print(f"Video FPS       : {fps:.3f}")
+
     print(f"Total frames    : {total_frames}")
+
     print(f"Resolution      : {frame_width} x {frame_height}")
-    print(f"Video duration  : {video_duration_seconds:.3f} seconds")
+
+    print(
+        f"Video duration  : "
+        f"{video_duration_seconds:.3f} seconds"
+    )
+
 
     # ------------------------------------------------------------------
     # PREPARE CSV
@@ -299,8 +369,9 @@ def main():
         "box_center_y",
 
         "box_width",
-        "box_height"
+        "box_height",
     ]
+
 
     # ------------------------------------------------------------------
     # RUN INFERENCE
@@ -318,40 +389,59 @@ def main():
 
     class_counts = {}
 
+
     with open(
-        RAW_DETECTION_FILE,
+
+        raw_detection_file,
+
         "w",
+
         newline="",
-        encoding="utf-8"
+
+        encoding="utf-8",
+
     ) as detection_csv:
 
         writer = csv.DictWriter(
+
             detection_csv,
-            fieldnames=detection_columns
+
+            fieldnames=detection_columns,
         )
 
         writer.writeheader()
+
 
         while True:
 
             read_success, frame = video_capture.read()
 
             if not read_success:
+
                 break
+
 
             timestamp_seconds = frame_number / fps
 
+
             results = model.predict(
+
                 source=frame,
+
                 imgsz=IMAGE_SIZE,
+
                 conf=CONFIDENCE_THRESHOLD,
+
                 device=DEVICE,
-                verbose=False
+
+                verbose=False,
             )
+
 
             result = results[0]
 
             frame_detection_count = 0
+
 
             if result.boxes is not None:
 
@@ -363,9 +453,12 @@ def main():
 
                     confidence = float(box.conf.item())
 
+
                     x1, y1, x2, y2 = (
+
                         box.xyxy[0].cpu().tolist()
                     )
+
 
                     box_center_x = (x1 + x2) / 2
 
@@ -374,6 +467,7 @@ def main():
                     box_width = x2 - x1
 
                     box_height = y2 - y1
+
 
                     writer.writerow({
 
@@ -417,32 +511,43 @@ def main():
                             round(box_width, 3),
 
                         "box_height":
-                            round(box_height, 3)
+                            round(box_height, 3),
                     })
+
 
                     total_detections += 1
 
                     frame_detection_count += 1
 
+
                     class_counts[class_name] = (
+
                         class_counts.get(class_name, 0) + 1
                     )
 
+
             if frame_detection_count > 0:
+
                 frames_with_detections += 1
 
+
             processed_frames += 1
+
 
             if processed_frames % 100 == 0:
 
                 print(
+
                     f"Processed "
                     f"{processed_frames}/{total_frames} frames"
                 )
 
+
             frame_number += 1
 
+
     video_capture.release()
+
 
     # ------------------------------------------------------------------
     # SAVE SUMMARY
@@ -450,9 +555,12 @@ def main():
 
     print_header("SAVING INFERENCE SUMMARY")
 
+
     frames_without_detections = (
+
         processed_frames - frames_with_detections
     )
+
 
     detection_rate_percent = (
 
@@ -464,6 +572,7 @@ def main():
 
         else 0
     )
+
 
     summary_columns = [
 
@@ -489,22 +598,31 @@ def main():
 
         "confidence_threshold",
 
-        "model_path"
+        "model_path",
     ]
 
+
     with open(
-        INFERENCE_SUMMARY_FILE,
+
+        inference_summary_file,
+
         "w",
+
         newline="",
-        encoding="utf-8"
+
+        encoding="utf-8",
+
     ) as summary_csv:
 
         writer = csv.DictWriter(
+
             summary_csv,
-            fieldnames=summary_columns
+
+            fieldnames=summary_columns,
         )
 
         writer.writeheader()
+
 
         writer.writerow({
 
@@ -542,8 +660,9 @@ def main():
                 CONFIDENCE_THRESHOLD,
 
             "model_path":
-                str(MODEL_PATH)
+                str(MODEL_PATH),
         })
+
 
     # ------------------------------------------------------------------
     # FINAL REPORT
@@ -584,20 +703,28 @@ def main():
 
     print()
 
-    print(f"Raw detections saved to:\n{RAW_DETECTION_FILE}")
+    print(f"Raw detections saved to:\n{raw_detection_file}")
 
     print()
 
-    print(f"Inference summary saved to:\n{INFERENCE_SUMMARY_FILE}")
+    print(
+        f"Inference summary saved to:\n"
+        f"{inference_summary_file}"
+    )
 
-    print_header("STATUS: OFFLINE YOLO INFERENCE COMPLETED SUCCESSFULLY")
+    print_header(
+        "STATUS: OFFLINE YOLO INFERENCE COMPLETED SUCCESSFULLY"
+    )
 
     print(
+
         "Next stage:\n"
+
         "Build the temporal detection timeline and suppress "
         "frame-level prediction flicker."
     )
 
 
 if __name__ == "__main__":
+
     main()
