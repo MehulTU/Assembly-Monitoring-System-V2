@@ -1,5 +1,7 @@
 # AI-Supported Modular Assembly Monitoring System (Version 2)
 
+> **Project family:** [V1 Classical CV](https://github.com/MehulTU/Assembly-Monitoring-System) · **V2 YOLO11 pipeline (this repo)** · [V2.1 upgrade](https://github.com/MehulTU/Assembly-Monitoring-System-V2.1) · Author: [@MehulTU](https://github.com/MehulTU)
+
 An AI-supported modular computer vision framework for monitoring manual assembly processes using **YOLO-based object detection**, developed as part of my **Master of Science Thesis in Aerospace Engineering** at **Technical University of Darmstadt (TU Darmstadt), Germany**.
 
 Version 2 extends the validated classical computer vision architecture developed in Version 1 by introducing deep learning for object recognition while preserving the modular software design. The framework is designed to support future research in intelligent manufacturing, productivity analysis, ergonomics assessment, and Digital Twin integration.
